@@ -1,0 +1,32 @@
+#!/bin/bash
+#Author: Paulo Jerônimo (@paulojeronimo, pj@paulojeronimo.info)
+#
+# Esse script deve ser executado como pj, 
+# após a execução do script do1
+
+sudo mount /dev/sdc2 /mnt
+
+sudo yum -y install vim-enhanced
+cat > ~/.vimrc <<EOF
+set tabstop=2
+set shiftwidth=2
+set expandtab
+set number
+syntax on
+EOF
+
+sudo yum -y install \
+http://pkgs.repoforge.org/txt2tags/txt2tags-2.6-1.el6.rf.noarch.rpm \
+lynx \
+tmux \
+tree
+
+sudo yum -y group install \
+development-tools \
+gnome-desktop-environment
+
+sudo ln -sf /lib/systemd/system/graphical.target /etc/systemd/system/default.target
+
+sudo umount /mnt
+
+sudo init 5

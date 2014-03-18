@@ -1,0 +1,33 @@
+#!/bin/bash
+#Author: Paulo Jerônimo (@paulojeronimo, pj@paulojeronimo.info)
+#
+# Esse script deve ser executado como pj, 
+# após a execução do script do2
+
+cd /data/mirrors
+sudo rm Fedora-20-x86_64
+sudo ln -s /run/media/pj/PJ-HFS/mirrors/Fedora-20-x86_64
+
+# Configuração do Ç
+sudo yum -y install gtk3-immodules.x86_64
+sudo sed -i 's/^\("cedilla".*:co\)\(.*\)/\1:en_US\2/g' /usr/lib64/gtk-3.0/3.0.0/immodules.cache
+gsettings set org.gnome.settings-daemon.plugins.keyboard active false
+imsettings-switch im-cedilla
+
+# Instalação do Fedy
+sudo bash -c "cd /tmp; curl http://satya164.github.io/fedy/fedy-installer -o fedy-installer && chmod +x fedy-installer && ./fedy-installer"
+sudo fedy -e \
+media_codecs \
+yum_keepcache \
+rem_oldkernels \
+adobe_flash \
+google_chrome \
+nautilus_dropbox \
+oracle_jdk \
+skype_linux \
+dvd_playback \
+core_fonts \
+font_rendering
+
+# Instalação do VLC
+sudo yum -y install vlc
