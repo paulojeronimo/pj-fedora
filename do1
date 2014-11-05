@@ -1,44 +1,61 @@
 #!/bin/bash
-#Author: Paulo Jerônimo (@paulojeronimo, pj@paulojeronimo.info)
+# Author: Paulo Jeronimo (@paulojeronimo, paulojeronimo@gmail.com)
 #
-# Esse script deve ser executado como root, 
-# após a realização da instalação mínima do Fedora 
+# Este script deve ser executado como root
 
-export PJ_UID=501
-export STAFF_GID=20
+MY_USER=${MY_USER:-pj}
+MY_GROUP=${MY_GROUP:-staff}
+PASSWD=senhapadrao
+
+export MY_UID=501
+export MY_GID=20
 
 sed -i '
   s/^\(%wheel.*ALL\)/#\1/
-  s/^#\(%wheel.*NOPASSWD.*\)/\1/
+  s/^# \(%wheel.*NOPASSWD.*\)/\1/
 ' /etc/sudoers
 
-for f in fedora.repo fedora-updates.repo
+cat > /etc/yum.repos.d/local-mirror.repo <<'EOF'
+[local-mirror-fedora]
+name=Local fedora $releasever - $basearch
+failovermethod=priority
+baseurl=file:///data/mirrors/Fedora-$releasever-$basearch/releases/$releasever/Everything/$basearch/os/
+enabled=1
+metadata_expire=7d
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-20-$basearch
+proxy=_none_
+
+[local-mirror-updates]
+name=Local fedora $releasever - $basearch - Updates
+failovermethod=priority
+baseurl=file:///data/mirrors/Fedora-$releasever-$basearch/updates/$releasever/$basearch/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-20-$basearch
+proxy=_none_
+EOF
+
+for f in fedora.repo updates.repo
 do
-  baseurl='file:///data/mirrors/Fedora-$releasever-$basearch'
-  case $f in
-    fedora.repo) baseurl=$baseurl'/releases/$releasever/Everything/$basearch/os/';;
-    fedora-updates.repo) baseurl=$baseurl'/updates/$releasever/$basearch/';;
-  esac
-  sed -i "
-    1,/^#baseurl=/{ s,^#\(baseurl=\).*$,\1$baseurl, ; }
-    1,/^metalink=/{ s,^\(metalink=.*\)$,#\1, ; }
-  " /etc/yum.repos.d/$f
+  sed -i '
+    s/^\(enable=\)0/\11/
+  ' /etc/yum.repos.d/$f
 done
 
+ln -s /mnt /"HD Externo"
+#mkdir -p /data/mirrors
+#cd /data/mirrors
+#l=Fedora-20-x86_64
+#[ -L $l ] && rm -f $l
+#ln -s /mnt/mirrors/$l
+
 groupmod -g 200 games
-groupadd -g $STAFF_GID staff
-useradd -m -s /bin/bash -G wheel -u $PJ_UID -g staff pj
-passwd pj
-
-#echo "/dev/sda4	/data hfsplus defaults 0 0" >> /etc/fstab
-#mount /data
-
-mount /dev/sdc2 /mnt
-
-mirrors=/data/mirrors
-rm -f $mirrors
-mkdir -p $mirrors
-ln -s /mnt/mirrors/Fedora-20-x86_64 $mirrors
+groupadd -g $MY_GID $MY_GROUP
+useradd -m -s /bin/bash -G wheel -u $MY_UID -g $MY_GROUP $MY_USER
+echo $PASSWD | passwd $MY_USER --stdin
 
 yum -y update
 shutdown -r now
+
+# vim: set ts=2 sw=2 expandtab:

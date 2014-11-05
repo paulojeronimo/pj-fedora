@@ -1,33 +1,40 @@
 #!/bin/bash
-#Author: Paulo Jerônimo (@paulojeronimo, pj@paulojeronimo.info)
+# Author: Paulo Jeronimo (@paulojeronimo, paulojeronimo@gmail.com)
 #
-# Esse script deve ser executado como pj, 
-# após a execução do script do2
+# Este script deve ser executado como $MY_USER e dentro de uma sessão GNOME
 
-cd /data/mirrors
-sudo rm Fedora-20-x86_64
-sudo ln -s /run/media/pj/PJ-HFS/mirrors/Fedora-20-x86_64
+MY_USER=${MY_USER:-pj}
+CONFIG_HOME=${CONFIG_HOME:-/data/$MY_USER/Projects/github.com/paulojeronimo/dotfiles/.scripts/criar-links-data}
 
-# Configuração do Ç
+# configura o diretório home criando links para os arquivos em /data/$MY_USER
+[ -x "$CONFIG_HOME" ] && $CONFIG_HOME
+
+# instala o Fedy e, a partir dele, outros softwares
+curl -sSL https://satya164.github.io/fedy/fedy-installer | sudo bash
+sudo fedy -e \
+  adobe_flash\
+  core_fonts\
+  dvd_playback\
+  font_rendering\
+  google_chrome\
+  google_talkplugin\
+  media_codecs\
+  nautilus_dropbox\
+  oracle_jdk\
+  skype_linux\
+  teamviewer_linux
+
+# instala outros softwares
+sudo yum -y install \
+  vlc
+
+# ajusta o C cedilha
 sudo yum -y install gtk3-immodules.x86_64
 sudo sed -i 's/^\("cedilla".*:co\)\(.*\)/\1:en_US\2/g' /usr/lib64/gtk-3.0/3.0.0/immodules.cache
 gsettings set org.gnome.settings-daemon.plugins.keyboard active false
 imsettings-switch im-cedilla
 
-# Instalação do Fedy
-sudo bash -c "cd /tmp; curl http://satya164.github.io/fedy/fedy-installer -o fedy-installer && chmod +x fedy-installer && ./fedy-installer"
-sudo fedy -e \
-media_codecs \
-yum_keepcache \
-rem_oldkernels \
-adobe_flash \
-google_chrome \
-nautilus_dropbox \
-oracle_jdk \
-skype_linux \
-dvd_playback \
-core_fonts \
-font_rendering
+# encerra a sessão GNOME
+gnome-session-quit --no-prompt
 
-# Instalação do VLC
-sudo yum -y install vlc
+# vim: set ts=2 sw=2 expandtab:
